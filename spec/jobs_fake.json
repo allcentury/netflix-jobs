@@ -1,0 +1,49 @@
+{
+  "record_count": 20,
+  "records": {
+    "postings": [
+			{
+        "text": "Technical Project Manager, Network Engineering",
+        "lever_id": "abc-123-def",
+        "team": [
+          "Core Engineering"
+        ],
+        "slug": "technical-program-manager-network-engineering",
+        "external_id": "9999",
+        "description": "<div><span style=\"font-size: 11pt\">Netflix has been changing the way people watch shows and movies. We strive to deliver a great Netflix viewing experience in over 190 countries so our customers can watch whatever, whenever, interruption free. Join us to help Netflix grow into the world's leading producer of premium content. Our Offices and Creative Spaces network engineering team designs, builds and operates networks to connect our internal users, creatives, production teams and partners around the world. We are looking for a Technical Project Manager that can own the successful execution of multiple build and deployment initiatives in parallel as we scale and expand our footprint around the globe. You will leverage your technical expertise and experiences, develop an understanding of Netflix and our customer and internal partner needs, and with your peers execute to deliver network connectivity and services to our users and offices around the world.&nbsp;</span></div><div><h2>Job Description</h2><ul><li>Partner with engineers, business and technical leaders, and real estate partners from internal and external teams to deliver networks to Netflix creative and business users</li><li>Work cross-functionally with internal teams and external vendors to plan and manage our growth around the globe</li><li>Own and maintain our backlog of network build and deployment projects globally&nbsp;</li><li>Maintain and evolve milestones and a project framework to ensure timelines and deliverables are met</li><li>Socialize project timelines and maintain accountability on deliverables</li><li>Apply an understanding of networks, facility construction and build-out, as well as project management within the domain of network infrastructure deployment, engineering and operations</li><li>Work with VARs to manage logistic pipelines for network deployments</li><li>Work with VARs for asset management and licensing renewals</li><li>Work with management on FP&amp;A for enterprise networking spend</li></ul></div><div><h2>Professional Qualifications</h2><ul><li>At least 5 years of relevant professional experience</li><li>Experience managing and working with engineering teams collectively</li><li>Sharp assessment skills with an ability to evaluate wants vs. needs and ability to negotiate prioritization accordingly</li><li>Knowledge of facilities construction planning and program management</li><li>Experience in asset tracking, asset management, and general logistics</li><li>Understanding of networking technologies, roles, functions and basic capabilities</li></ul></div><div><h2>Organizational Qualifications</h2><ul><li>Self organize, participate in cross-functional projects with our partners&nbsp;&nbsp;</li><li>See a problem or opportunity, take ownership and act on it independently</li><li>Collaborate and manage efforts with peers and teams across responsibility areas, languages, geography and time zones</li><li>Be a self-starter, curious and not afraid to ask when in doubt</li><li>Clearly communicate status on project milestones, risks, blockers to critical path items and hold team members accountable for deliverables</li></ul></div><div><h2>Additional Requirements</h2><ul><li>Occasional travel</li><li>Experience working in media and studio environments is a plus</li></ul></div><div><br></div>",
+        "search_text": "Los Angeles, California \r\n Product \r\n Core Engineering \r\n  \r\n Technical Project Manager, Network Engineering \r\n Netflix has been changing the way people watch shows and movies. We strive to deliver a great Netflix viewing experience in over 190 countries so our customers can watch whatever, whenever, interruption free. Join us to help Netflix grow into the world's leading producer of premium content. Our Offices and Creative Spaces network engineering team designs, builds and operates networks to connect our internal users, creatives, production teams and partners around the world. We are looking for a Technical Project Manager that can own the successful execution of multiple build and deployment initiatives in parallel as we scale and expand our footprint around the globe. You will leverage your technical expertise and experiences, develop an understanding of Netflix and our customer and internal partner needs, and with your peers execute to deliver network connectivity and services to our users and offices around the world. \n \r\n Job Description <li>Partner with engineers, business and technical leaders, and real estate partners from internal and external teams to deliver networks to Netflix creative and business users</li><li>Work cross-functionally with internal teams and external vendors to plan and manage our growth around the globe</li><li>Own and maintain our backlog of network build and deployment projects globally&nbsp;</li><li>Maintain and evolve milestones and a project framework to ensure timelines and deliverables are met</li><li>Socialize project timelines and maintain accountability on deliverables</li><li>Apply an understanding of networks, facility construction and build-out, as well as project management within the domain of network infrastructure deployment, engineering and operations</li><li>Work with VARs to manage logistic pipelines for network deployments</li><li>Work with VARs for asset management and licensing renewals</li><li>Work with management on FP&amp;A for enterprise networking spend</li> \r\n Professional Qualifications <li>At least 5 years of relevant professional experience</li><li>Experience managing and working with engineering teams collectively</li><li>Sharp assessment skills with an ability to evaluate wants vs. needs and ability to negotiate prioritization accordingly</li><li>Knowledge of facilities construction planning and program management</li><li>Experience in asset tracking, asset management, and general logistics</li><li>Understanding of networking technologies, roles, functions and basic capabilities</li> \r\n Organizational Qualifications <li>Self organize, participate in cross-functional projects with our partners&nbsp;&nbsp;</li><li>See a problem or opportunity, take ownership and act on it independently</li><li>Collaborate and manage efforts with peers and teams across responsibility areas, languages, geography and time zones</li><li>Be a self-starter, curious and not afraid to ask when in doubt</li><li>Clearly communicate status on project milestones, risks, blockers to critical path items and hold team members accountable for deliverables</li> \r\n Additional Requirements <li>Occasional travel</li><li>Experience working in media and studio environments is a plus</li> \r\n \n",
+        "state": "Public",
+        "updated_at": "2021-05-27T15:35:44+00:00",
+        "created_at": "2021-01-28T08:55:28Z",
+        "location": "Los Angeles, California",
+        "organization": [
+          "Product"
+        ],
+        "subteam": [
+          "Infrastructure Network Engineering"
+        ],
+        "lever_team": "Studio and Corporate Infrastructure",
+        "alternate_locations": [
+          "Los Gatos, California"
+        ],
+        "_index": "5e7cf522815a780d9124028c",
+        "_type": "_doc",
+        "_score": 65.986374,
+        "_version": null,
+        "_explanation": null,
+        "sort": null,
+        "highlight": {
+          "text": "Technical Project <em>Manager</em>, Network <em>Engineering</em>",
+          "slug": "technical-program-<em>manager</em>-network-<em>engineering</em>",
+          "subteam": "Infrastructure Network <em>Engineering</em>",
+          "team": "Core <em>Engineering</em>",
+          "description": " producer of premium content. Our Offices and Creative Spaces network <em>engineering</em> team designs, builds and operates networks to connect our internal users, creatives, production teams and partners around the world. We are looking for a Technical Project <em>Manager</em> that can own the successful execution",
+					"search_text": "Los Angeles, California \r\n Product \r\n Core <em>Engineering</em> \r\n  \r\n Technical Project <em>Manager</em>, Network <em>Engineering</em> \r\n Netflix has been changing the way people watch shows and movies. We strive to deliver a great Netflix viewing experience in over 190 countries so our customers can watch whatever"
+				},
+				"id": "6014c25baabfb4f1d8882a3c"
+			}
+		]
+	}
+}
+
+
