@@ -19,6 +19,29 @@ describe "get_jobs" do
       expect(resp[:message]).to eq("No new jobs")
     end
 
+    it "loads for the first time" do
+      allow(Fetch).to receive(:previous_listings).and_return({})
+      allow(Fetch).to receive(:current_listings).and_return(previous_jobs)
+      resp = response
+      expect(resp[:message]).to include("20 new listing(s)")
+    end
+
+    it "loads for the first time" do
+    end
+
+    it "compares new jobs to old jobs and has no output when they are the same" do
+      new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)
+      allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
+      allow(Fetch).to receive(:current_listings).and_return(new_jobs)
+      resp = response
+      expect(resp[:message]).to eq("1 new listing(s): 9999")
+    end
+
+    it "saves any new listings into the previous listing" do
+      new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)
+      allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
+    end
+
     it "compares new jobs to old jobs and has no output when they are the same" do
       new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)
       allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
@@ -94,7 +117,7 @@ describe "get_jobs" do
       stub = Aws::SESV2::Client.new(stub_responses: true)
       allow(Mailer).to receive(:aws_ses_client).and_return(stub)
       message = <<~EOF
-      There are currently #{new_jobs.size}, they are:
+      There are currently #{new_jobs.size} new job(s), they are:
 
       -------------
       Title: Technical Project Manager, Network Engineering
@@ -102,6 +125,7 @@ describe "get_jobs" do
       Organiztion: Product
       Subteam: Infrastructure Network Engineering
       Locations: Los Angeles, California, Los Gatos, California
+      Link: https://jobs.netflix.com/jobs/9999
       -------------
       EOF
 

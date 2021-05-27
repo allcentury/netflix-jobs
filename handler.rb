@@ -6,7 +6,11 @@ require 'aws-sdk-sesv2'
 class Mailer
   def self.send_notification(new_jobs)
 
-    heading = "There are currently #{new_jobs.size}, they are:\n\n"
+    heading = <<~EOF
+    There are currently #{new_jobs.size} new job(s), they are:
+
+    -------------
+    EOF
     jobs = new_jobs.map do |job|
       message(job)
     end
@@ -36,12 +40,12 @@ class Mailer
 
   def self.message(job)
     <<~EOF
-      -------------
       Title: #{job[:text]}
       Team: #{job[:team].join(", ")}
       Organiztion: #{job[:organization].join(", ")}
       Subteam: #{job[:subteam].join(", ")}
-      Locations: #{job[:location]}, #{job[:alternate_locations].join(", ")}
+      Locations: #{job[:location]}, #{job[:alternate_locations]&.join(", ")}
+      Link: https://jobs.netflix.com/jobs/#{job[:external_id]}
       -------------
     EOF
   end
@@ -73,7 +77,7 @@ class Fetch
   end
 
   def self.purge_data
-    aws_s3_client.put(JSON.generate({}))
+    put(JSON.generate({}))
   end
 
   def self.put(content)
@@ -97,6 +101,7 @@ class JobDiff
   end
 
   def self.get_ids(jobs)
+    return [] unless jobs[:records] && jobs[:records][:postings]
     jobs[:records][:postings].map do |job|
       job[:id]
     end
