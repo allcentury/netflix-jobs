@@ -1,38 +1,53 @@
 require 'spec_helper'
 
 describe "get_jobs" do
-  let(:previous_jobs) do
-    JSON.parse(File.read("./spec/jobs.json"), symbolize_names: true)
-  end
-  let(:response) do
-    JSON.parse(get_jobs(event: nil, context: nil)[:body], symbolize_names: true)
-  end
+  context "handler tests" do
+    before(:each) do
+      allow(Mailer).to receive(:send_notification)
+    end
+    let(:previous_jobs) do
+      JSON.parse(File.read("./spec/jobs.json"), symbolize_names: true)
+    end
+    let(:response) do
+      JSON.parse(get_jobs(event: nil, context: nil)[:body], symbolize_names: true)
+    end
 
-  it "compares new jobs to old jobs and has no output when they are the same" do
-    allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
-    allow(Fetch).to receive(:current_listings).and_return(previous_jobs)
-    resp = response
-    expect(resp[:message]).to eq("No new jobs")
-  end
+    it "compares new jobs to old jobs and has no output when they are the same" do
+      allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
+      allow(Fetch).to receive(:current_listings).and_return(previous_jobs)
+      resp = response
+      expect(resp[:message]).to eq("No new jobs")
+    end
 
-  it "compares new jobs to old jobs and has no output when they are the same" do
-    new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)
-    allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
-    allow(Fetch).to receive(:current_listings).and_return(new_jobs)
-    resp = response
-    expect(resp[:message]).to eq("1 new listing(s): 9999")
-  end
+    it "compares new jobs to old jobs and has no output when they are the same" do
+      new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)
+      allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
+      allow(Fetch).to receive(:current_listings).and_return(new_jobs)
+      resp = response
+      expect(resp[:message]).to eq("1 new listing(s): 9999")
+    end
 
-  it "saves any new listings into the previous listing" do
-    new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)
-    allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
-    allow(Fetch).to receive(:current_listings).and_return(new_jobs)
-    expect(Fetch).to receive(:update_previous_listings).with(hash_including(external_id: "9999"))
+    it "saves any new listings into the previous listing" do
+      new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)
+      allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
+      allow(Fetch).to receive(:current_listings).and_return(new_jobs)
+      expect(Fetch).to receive(:update_previous_listings).with(hash_including(id: "9999"))
 
-    response
-  end
+      response
+    end
 
-  it "saves any new listings into the previous listing" do
+    it "emails on new listings" do
+      new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)
+      allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
+      allow(Fetch).to receive(:current_listings).and_return(new_jobs)
+      expect(Fetch).to receive(:update_previous_listings).with(hash_including(id: "9999"))
+      expect(Mailer).to receive(:send_notification) do |jobs|
+        job = jobs.find { |j| j[:id] == "9999" }
+        expect(job).to be_truthy
+      end
+
+      response
+    end
   end
 
   describe "Fetch" do
@@ -72,5 +87,47 @@ describe "get_jobs" do
       end
     end
   end
+
+  describe "Mailer" do
+    it "sends email via SES" do
+      new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)[:records][:postings]
+      stub = Aws::SESV2::Client.new(stub_responses: true)
+      allow(Mailer).to receive(:aws_ses_client).and_return(stub)
+      message = <<~EOF
+      There are currently #{new_jobs.size}, they are:
+
+      -------------
+      Title: Technical Project Manager, Network Engineering
+      Team: Core Engineering
+      Organiztion: Product
+      Subteam: Infrastructure Network Engineering
+      Locations: Los Angeles, California, Los Gatos, California
+      -------------
+      EOF
+
+      args = {
+        from_email_address: "anthony.s.ross@gmail.com",
+        destination: {
+          to_addresses: ["anthony.s.ross@gmail.com"],
+        },
+        content: {
+          simple: {
+            subject: {
+              data: "NEW NETFLIX JOB!",
+            },
+            body: {
+              text: {
+                data: message
+              }
+            },
+          }
+        }
+      }
+      expect(stub).to receive(:send_email).with(args).and_call_original
+
+      Mailer.send_notification(new_jobs)
+    end
+  end
+
 
 end

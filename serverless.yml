@@ -20,31 +20,27 @@ service: netflix-jobs
 # Check out our docs for more details
 frameworkVersion: '2'
 
+custom:
+  bucket: ar-jobs
+
 provider:
   name: aws
   runtime: ruby2.7
   lambdaHashingVersion: 20201221
-
-# you can overwrite defaults here
-#  stage: dev
-   region: us-west-2
-
-# you can add statements to the Lambda function's IAM Role here
-   iamRoleStatements:
-     - Effect: "Allow"
-       Action:
-         - "s3:ListBucket"
-       Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ar-jobs" } ] ]  }
-     - Effect: "Allow"
-       Action:
-         - "s3:PutObject"
-         - "s3:GetObject"
-       Resource:
-         Fn::Join:
-           - ""
-           - - "arn:aws:s3:::"
-             - "Ref" : "ar-jobs"
-             - "/*"
+  region: us-west-2
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:PutObject"
+        - "s3:PutObjectAcl"
+        - "s3:GetObject"
+        - "s3:GetObjectAcl"
+      Resource: "arn:aws:s3:::${self:custom.bucket}/*"
+    - Effect: "Allow"
+      Action:
+        - "ses:SendEmail"
+        - "ses:SendRawEmail"
+      Resource: "*"
 
 # you can define service wide environment variables here
 #  environment:
@@ -70,7 +66,7 @@ functions:
 #          method: get
 #      - websocket: $connect
 #      - s3: ${env:BUCKET}
-      - schedule: rate(10 minutes)
+      - schedule: rate(1440 minutes)
 #      - sns: greeter-topic
 #      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
 #      - alexaSkill: amzn1.ask.skill.xx-xx-xx-xx
