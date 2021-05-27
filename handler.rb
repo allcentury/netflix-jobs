@@ -25,7 +25,7 @@ class Mailer
         content: {
           simple: {
             subject: {
-              data: "NEW NETFLIX JOB!",
+              data: "NEW NETFLIX JOBS!",
             },
             body: {
               text: {
