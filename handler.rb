@@ -62,18 +62,26 @@ class Fetch
 
   def self.previous_listings
     s3 = aws_s3_client
-    content = s3.get_object(bucket: 'ar-jobs', key: 'netflix_jobs.json').body.read
+    content = s3.get_object(bucket: BUCKET, key: KEY).body.read
     JSON.parse(content, symbolize_names: true)
   end
 
   def self.update_previous_listings(new_listings)
     merged_data = previous_listings.merge(new_listings)
+    put(JSON.generate(merged_data))
+    merged_data
+  end
+
+  def self.purge
+    aws_s3_client.put(JSON.generate({}))
+  end
+
+  def self.put(content)
     aws_s3_client.put_object(
-      body: JSON.generate(merged_data),
+      body: content,
       bucket: BUCKET,
       key: KEY,
     )
-    merged_data
   end
 
   def self.aws_s3_client
@@ -95,7 +103,21 @@ class JobDiff
   end
 end
 
+def return_message(msg, event)
+  {
+    statusCode: 200,
+    body: {
+      message: msg,
+      input: event
+    }.to_json
+  }
+end
+
 def get_jobs(event:, context:)
+  if event && event[:purge_data]
+    Fetch.purge_data
+    return return_message("Purged data", event)
+  end
   new = Fetch.current_listings
   prev = Fetch.previous_listings
   diff = JobDiff.diff(prev, new)
@@ -115,11 +137,5 @@ def get_jobs(event:, context:)
     Mailer.send_notification(jobs)
   end
 
-  {
-    statusCode: 200,
-    body: {
-      message: msg,
-      input: event
-    }.to_json
-  }
+  return_message(msg, event)
 end
