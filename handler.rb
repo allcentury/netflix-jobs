@@ -37,11 +37,11 @@ class Mailer
   def self.message(job)
     <<~EOF
       -------------
-      Title: Technical Project Manager, Network Engineering
-      Team: Core Engineering
-      Organiztion: Product
-      Subteam: Infrastructure Network Engineering
-      Locations: Los Angeles, California, Los Gatos, California
+      Title: #{job[:text]}
+      Team: #{job[:team].join(", ")}
+      Organiztion: #{job[:organization].join(", ")}
+      Subteam: #{job[:subteam].join(", ")}
+      Locations: #{job[:location]}, #{job[:alternate_locations].join(", ")}
       -------------
     EOF
   end
@@ -72,7 +72,7 @@ class Fetch
     merged_data
   end
 
-  def self.purge
+  def self.purge_data
     aws_s3_client.put(JSON.generate({}))
   end
 
@@ -114,7 +114,7 @@ def return_message(msg, event)
 end
 
 def get_jobs(event:, context:)
-  if event && event[:purge_data]
+  if event && event["purge_data"]
     Fetch.purge_data
     return return_message("Purged data", event)
   end
