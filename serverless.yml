@@ -28,19 +28,21 @@ provider:
   runtime: ruby2.7
   lambdaHashingVersion: 20201221
   region: us-west-2
-  iamRoleStatements:
-    - Effect: "Allow"
-      Action:
-        - "s3:PutObject"
-        - "s3:PutObjectAcl"
-        - "s3:GetObject"
-        - "s3:GetObjectAcl"
-      Resource: "arn:aws:s3:::${self:custom.bucket}/*"
-    - Effect: "Allow"
-      Action:
-        - "ses:SendEmail"
-        - "ses:SendRawEmail"
-      Resource: "*"
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "s3:PutObject"
+            - "s3:PutObjectAcl"
+            - "s3:GetObject"
+            - "s3:GetObjectAcl"
+          Resource: "arn:aws:s3:::${self:custom.bucket}/*"
+        - Effect: "Allow"
+          Action:
+            - "ses:SendEmail"
+            - "ses:SendRawEmail"
+          Resource: "*"
 
 # you can define service wide environment variables here
 #  environment:
