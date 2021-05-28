@@ -65,7 +65,7 @@ class Fetch
     return {} unless jobs.dig(:records, :postings)
 
     jobs[:records][:postings].map do |job|
-      [job[:id], job]
+      [job[:id].to_sym, job]
     end.to_h
   end
 

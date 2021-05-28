@@ -15,7 +15,7 @@ describe "get_jobs" do
     let(:previous_jobs) do
       jobs = JSON.parse(File.read("./spec/jobs.json"), symbolize_names: true)
       jobs[:records][:postings].map do |job|
-        [job[:id], job]
+        [job[:id].to_sym, job]
       end.to_h
     end
     let(:response) do
