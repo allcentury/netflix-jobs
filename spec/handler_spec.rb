@@ -1,20 +1,30 @@
 require 'spec_helper'
 
 describe "get_jobs" do
+  let(:new_jobs) do
+    new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)
+    new_jobs = new_jobs[:records][:postings].map do |job|
+      [job[:id], job]
+    end.to_h
+  end
+
   context "handler tests" do
     before(:each) do
       allow(Mailer).to receive(:send_notification)
     end
     let(:previous_jobs) do
-      JSON.parse(File.read("./spec/jobs.json"), symbolize_names: true)
+      jobs = JSON.parse(File.read("./spec/jobs.json"), symbolize_names: true)
+      jobs[:records][:postings].map do |job|
+        [job[:id], job]
+      end.to_h
     end
     let(:response) do
       JSON.parse(get_jobs(event: nil, context: nil)[:body], symbolize_names: true)
     end
 
     it "compares new jobs to old jobs and has no output when they are the same" do
+      allow(HTTParty).to receive(:get).with('https://jobs.netflix.com/api/search?q="engineering manager"', format: :plain).and_return(File.read('./spec/jobs.json'))
       allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
-      allow(Fetch).to receive(:current_listings).and_return(previous_jobs)
       resp = response
       expect(resp[:message]).to eq("No new jobs")
     end
@@ -26,11 +36,7 @@ describe "get_jobs" do
       expect(resp[:message]).to include("20 new listing(s)")
     end
 
-    it "loads for the first time" do
-    end
-
-    it "compares new jobs to old jobs and has no output when they are the same" do
-      new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)
+    it "compares new jobs to old jobs and outputs the id of hte new listing" do
       allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
       allow(Fetch).to receive(:current_listings).and_return(new_jobs)
       resp = response
@@ -38,12 +44,17 @@ describe "get_jobs" do
     end
 
     it "saves any new listings into the previous listing" do
-      new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)
       allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
+      allow(Fetch).to receive(:current_listings).and_return(new_jobs).once
+      expect(Fetch).to receive(:put) do |arg|
+        expect(arg.keys.size).to eq(21)
+        expect(arg["9999"]).to be_truthy
+      end
+
+      response
     end
 
     it "compares new jobs to old jobs and has no output when they are the same" do
-      new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)
       allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
       allow(Fetch).to receive(:current_listings).and_return(new_jobs)
       resp = response
@@ -51,22 +62,20 @@ describe "get_jobs" do
     end
 
     it "saves any new listings into the previous listing" do
-      new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)
       allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
       allow(Fetch).to receive(:current_listings).and_return(new_jobs)
-      expect(Fetch).to receive(:update_previous_listings).with(hash_including(id: "9999"))
+      expect(Fetch).to receive(:update_previous_listings) do |arg|
+        expect(arg["9999"]).to be_truthy
+      end
 
       response
     end
 
     it "emails on new listings" do
-      new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)
       allow(Fetch).to receive(:previous_listings).and_return(previous_jobs)
       allow(Fetch).to receive(:current_listings).and_return(new_jobs)
-      expect(Fetch).to receive(:update_previous_listings).with(hash_including(id: "9999"))
       expect(Mailer).to receive(:send_notification) do |jobs|
-        job = jobs.find { |j| j[:id] == "9999" }
-        expect(job).to be_truthy
+        expect(jobs["9999"]).to be_truthy
       end
 
       response
@@ -76,9 +85,15 @@ describe "get_jobs" do
   describe "Fetch" do
     context "current_listings" do
       it "makes a call to Netflix" do
-        expect(JSON).to receive(:parse).with({}, symbolize_names: true)
-        expect(HTTParty).to receive(:get).with('https://jobs.netflix.com/api/search?q="engineering manager"', format: :plain).and_return({})
+        expect(JSON).to receive(:parse).with("{}", symbolize_names: true).and_call_original
+        expect(HTTParty).to receive(:get).with('https://jobs.netflix.com/api/search?q="engineering manager"', format: :plain).and_return("{}")
         Fetch.current_listings
+      end
+
+      it "returns a hash with id as the key and the job as the payload" do
+        expect(HTTParty).to receive(:get).with('https://jobs.netflix.com/api/search?q="engineering manager"', format: :plain).and_return(File.read('./spec/jobs.json'))
+        jobs = Fetch.current_listings
+        expect(jobs.keys.length).to eq(20)
       end
     end
 
@@ -113,7 +128,6 @@ describe "get_jobs" do
 
   describe "Mailer" do
     it "sends email via SES" do
-      new_jobs = JSON.parse(File.read("./spec/jobs_fake.json"), symbolize_names: true)[:records][:postings]
       stub = Aws::SESV2::Client.new(stub_responses: true)
       allow(Mailer).to receive(:aws_ses_client).and_return(stub)
       message = <<~EOF
@@ -152,6 +166,4 @@ describe "get_jobs" do
       Mailer.send_notification(new_jobs)
     end
   end
-
-
 end

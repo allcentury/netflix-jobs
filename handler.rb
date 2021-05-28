@@ -11,7 +11,7 @@ class Mailer
 
     -------------
     EOF
-    jobs = new_jobs.map do |job|
+    jobs = new_jobs.map do |id, job|
       message(job)
     end
     formatted_message = heading + jobs.join("\n")
@@ -61,7 +61,12 @@ class Fetch
 
   def self.current_listings
     resp = HTTParty.get('https://jobs.netflix.com/api/search?q="engineering manager"', format: :plain)
-    JSON.parse(resp, symbolize_names: true)
+    jobs = JSON.parse(resp, symbolize_names: true)
+    return {} unless jobs.dig(:records, :postings)
+
+    jobs[:records][:postings].map do |job|
+      [job[:id], job]
+    end.to_h
   end
 
   def self.previous_listings
@@ -72,17 +77,17 @@ class Fetch
 
   def self.update_previous_listings(new_listings)
     merged_data = previous_listings.merge(new_listings)
-    put(JSON.generate(merged_data))
+    put(merged_data)
     merged_data
   end
 
   def self.purge_data
-    put(JSON.generate({}))
+    put({})
   end
 
   def self.put(content)
     aws_s3_client.put_object(
-      body: content,
+      body: JSON.generate(content),
       bucket: BUCKET,
       key: KEY,
     )
@@ -95,9 +100,7 @@ end
 
 class JobDiff
   def self.diff(prev, new)
-    prev_ids = get_ids(prev)
-    new_ids = get_ids(new)
-    new_ids - prev_ids
+    new.keys - prev.keys
   end
 
   def self.get_ids(jobs)
@@ -125,21 +128,17 @@ def get_jobs(event:, context:)
   end
   new = Fetch.current_listings
   prev = Fetch.previous_listings
-  diff = JobDiff.diff(prev, new)
-  diff.each do |id|
-    job = new[:records][:postings].find { |job| job[:id] == id }
-    Fetch.update_previous_listings(job)
-  end
+  new_ids = new.keys - prev.keys
+
+  new_jobs = new.select { |k, _v| new_ids.include?(k) }
+
+  Fetch.update_previous_listings(new_jobs)
 
   msg = "No new jobs"
 
-  if !diff.empty?
-    msg = "#{diff.size} new listing(s): #{diff.map(&:to_s).join(",")}"
-    jobs = new[:records][:postings].select do |job|
-      diff.include?(job[:id])
-    end
-
-    Mailer.send_notification(jobs)
+  if !new_jobs.empty?
+    msg = "#{new_jobs.keys.size} new listing(s): #{new_jobs.keys.join(",")}"
+    Mailer.send_notification(new_jobs)
   end
 
   return_message(msg, event)
