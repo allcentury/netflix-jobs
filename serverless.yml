@@ -26,6 +26,8 @@ custom:
 provider:
   name: aws
   runtime: ruby2.7
+  memorySize: 128
+  timeout: 20
   lambdaHashingVersion: 20201221
   region: us-west-2
   iam:

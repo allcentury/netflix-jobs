@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'json'
 require 'httparty'
 require 'aws-sdk-s3'
@@ -11,9 +12,8 @@ class Mailer
 
     -------------
     EOF
-    jobs = new_jobs.map do |id, job|
-      message(job)
-    end
+    jobs = new_jobs.map { |id, job| message(job) }
+
     formatted_message = heading + jobs.join("\n")
 
     aws_ses_client.send_email(
@@ -98,19 +98,6 @@ class Fetch
   end
 end
 
-class JobDiff
-  def self.diff(prev, new)
-    new.keys - prev.keys
-  end
-
-  def self.get_ids(jobs)
-    return [] unless jobs[:records] && jobs[:records][:postings]
-    jobs[:records][:postings].map do |job|
-      job[:id]
-    end
-  end
-end
-
 def return_message(msg, event)
   {
     statusCode: 200,
@@ -121,25 +108,32 @@ def return_message(msg, event)
   }
 end
 
+class Runner
+  def self.run
+    new = Fetch.current_listings
+    prev = Fetch.previous_listings
+    new_ids = new.keys - prev.keys
+
+    new_jobs = new.select { |k, _v| new_ids.include?(k) }
+
+    Fetch.update_previous_listings(new_jobs)
+
+    msg = "No new jobs"
+
+    if !new_jobs.empty?
+      msg = "#{new_jobs.keys.size} new listing(s): #{new_jobs.keys.join(",")}"
+      Mailer.send_notification(new_jobs)
+    end
+    msg
+  end
+end
+
 def get_jobs(event:, context:)
   if event && event["purge_data"]
     Fetch.purge_data
     return return_message("Purged data", event)
   end
-  new = Fetch.current_listings
-  prev = Fetch.previous_listings
-  new_ids = new.keys - prev.keys
 
-  new_jobs = new.select { |k, _v| new_ids.include?(k) }
-
-  Fetch.update_previous_listings(new_jobs)
-
-  msg = "No new jobs"
-
-  if !new_jobs.empty?
-    msg = "#{new_jobs.keys.size} new listing(s): #{new_jobs.keys.join(",")}"
-    Mailer.send_notification(new_jobs)
-  end
-
+  msg = Runner.run
   return_message(msg, event)
 end
