@@ -41,9 +41,9 @@ class Mailer
   def self.message(job)
     <<~EOF
       Title: #{job[:text]}
-      Team: #{job[:team].join(", ")}
-      Organiztion: #{job[:organization].join(", ")}
-      Subteam: #{job[:subteam].join(", ")}
+      Team: #{job[:team]&.join(", ")}
+      Organiztion: #{job[:organization]&.join(", ")}
+      Subteam: #{job[:subteam]&.join(", ")}
       Locations: #{job[:location]}, #{job[:alternate_locations]&.join(", ")}
       Link: https://jobs.netflix.com/jobs/#{job[:external_id]}
       -------------
@@ -57,7 +57,7 @@ end
 
 class Fetch
   BUCKET = 'ar-jobs'
-  KEY = 'netflix_jobs.json'
+  KEY = 'netflix_jobs.gz'
 
   def self.current_listings
     resp = HTTParty.get('https://jobs.netflix.com/api/search?q="engineering manager"', format: :plain)
@@ -70,9 +70,20 @@ class Fetch
   end
 
   def self.previous_listings
-    s3 = aws_s3_client
-    content = s3.get_object(bucket: BUCKET, key: KEY).body.read
-    JSON.parse(content, symbolize_names: true)
+    if !object_exists?
+      put({}) # create it
+    end
+    get
+  end
+
+  def self.object_exists?
+    aws_s3_client.head_object(
+      bucket: BUCKET,
+      key: KEY,
+    )
+    true
+  rescue Aws::S3::Errors::NotFound
+    false
   end
 
   def self.update_previous_listings(new_listings)
@@ -86,11 +97,18 @@ class Fetch
   end
 
   def self.put(content)
+    zipped = Zlib::Deflate.deflate(JSON.generate(content))
     aws_s3_client.put_object(
-      body: JSON.generate(content),
+      body: zipped,
       bucket: BUCKET,
       key: KEY,
     )
+  end
+
+  def self.get(bucket: BUCKET, key: KEY)
+    content = aws_s3_client.get_object(bucket: bucket, key: key).body.read
+    unzipped = Zlib::Inflate.inflate(content)
+    JSON.parse(unzipped, symbolize_names: true)
   end
 
   def self.aws_s3_client

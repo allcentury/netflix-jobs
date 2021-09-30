@@ -83,6 +83,30 @@ describe "get_jobs" do
   end
 
   describe "Fetch" do
+    context "compression" do
+      let(:fake_client) do
+        class MyClient
+          def initialize(existing_jobs)
+            @existing_jobs = existing_jobs
+          end
+          def get_object(opts = {})
+            zipped = Zlib::Deflate.deflate(JSON.generate(@existing_jobs))
+            OpenStruct.new(body: StringIO.new(zipped))
+          end
+
+          def head_object(args = {})
+          end
+
+        end
+        MyClient
+      end
+
+      it "can read and write to an IO object" do
+        allow(Fetch).to receive(:aws_s3_client).and_return(fake_client.new({}))
+        previous = Fetch.previous_listings
+        expect(previous).to eq({})
+      end
+    end
     context "current_listings" do
       it "makes a call to Netflix" do
         expect(JSON).to receive(:parse).with("{}", symbolize_names: true).and_call_original
@@ -99,10 +123,24 @@ describe "get_jobs" do
 
     context "previous_listings" do
       it "calls S3" do
-        body = "{}"
+        string = Zlib::Deflate.deflate(JSON.generate({}))
+
         stub = Aws::S3::Client.new(stub_responses: {
-          get_object: { body: body }
+          get_object: { body: StringIO.new(string) }
         })
+        allow(Fetch).to receive(:aws_s3_client).and_return(stub)
+
+        response = Fetch.previous_listings
+        expect(response).to eq({})
+      end
+
+      it "creates the object if it doesn't exist" do
+        string = Zlib::Deflate.deflate(JSON.generate({}))
+        stub = Aws::S3::Client.new(stub_responses: {
+          head_object: Aws::S3::Errors::NotFound.new("a", "b"),
+          get_object: { body: StringIO.new(string) }
+        })
+        expect(Fetch).to receive(:put).with({})
         allow(Fetch).to receive(:aws_s3_client).and_return(stub)
 
         response = Fetch.previous_listings
@@ -118,10 +156,9 @@ describe "get_jobs" do
         stub = Aws::S3::Client.new(stub_responses: true)
         expect(Fetch).to receive(:previous_listings).and_return(old_job)
         allow(Fetch).to receive(:aws_s3_client).and_return(stub)
-        expect(stub).to receive(:put_object).with(body: JSON.generate(merged_data), bucket: 'ar-jobs', key: 'netflix_jobs.json').and_call_original
 
-        merged_data = Fetch.update_previous_listings(new_job)
-        expect(merged_data).to eq(merged_data)
+        new_merged_data = Fetch.update_previous_listings(new_job)
+        expect(new_merged_data).to eq(merged_data)
       end
     end
   end

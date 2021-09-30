@@ -1,3 +1,5 @@
 .serverless/
 .vendor/
 .bundle/
+tmp/
+

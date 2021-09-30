@@ -5,5 +5,5 @@ bundle install --deployment
 ```
 
 ```
-serverless deployment
+sls deploy
 ```
