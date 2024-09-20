@@ -60,7 +60,13 @@ class Fetch
   KEY = 'netflix_jobs.gz'
 
   def self.current_listings
-    resp = HTTParty.get('https://jobs.netflix.com/api/search?q="engineering manager"', format: :plain)
+    resp = HTTParty.get(
+      'https://jobs.netflix.com/api/search?q="engineering manager"',
+      headers: {
+        'User-Agent' => "I'd <3 to work at Netflix - anthony.s.ross@gmail.com"
+      },
+      format: :plain
+    )
     jobs = JSON.parse(resp, symbolize_names: true)
     return {} unless jobs.dig(:records, :postings)
 
