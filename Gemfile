@@ -4,8 +4,10 @@ source "https://rubygems.org"
 
 git_source(:github) { |repo_name| "https://github.com/#{repo_name}" }
 
-gem "pry"
 gem "httparty"
-gem "rspec"
 gem "aws-sdk-s3"
 gem "aws-sdk-sesv2"
+
+group :development do
+  gem "rspec"
+end
